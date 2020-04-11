@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        #header {
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding: 5px;
+        }
+
+        #config {
+            line-height: 30px;
+            background-color: #eeeeee;
+            height: 300px;
+            width: 300px;
+            float: left;
+            padding: 5px;
+        }
+
+        #display {
+            width: 350px;
+            float: left;
+            padding: 10px;
+        }
+
+        #footer {
+            background-color: black;
+            color: white;
+            clear: both;
+            text-align: center;
+            padding: 5px;
+        }
+    </style>
+    <meta charset="utf-8">
+    <title>网口调试助手(runoob.com)</title>
+    <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script>
+        var porttype, portaddress, portNO
+        $(document).ready(function () {
+            namespace = '/test_conn';
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+　　　　　　　//连接后发送日志
+            socket.on('connect', function(){console.log('connected')});
+　　　　　　　//点击发送时将text框的内容发送到后端
+            // $("#btn2").click(function (event) {
+            //     socket.emit('imessage', {data: $("#InPut").val()});
+            //     return false;
+            // });
+　　　　　　  //接收后端广播的信息
+            socket.on('message', function(data) {document.getElementById("OutPut").value += data;});
+
+            $("#Init").click(function () {
+                if (document.getElementById("Init").value == "开始连接") {
+                    $.post("/init", {
+                        porttype: document.getElementById("protocol").value,
+                        portaddress: document.getElementById("address").value,
+                        portNO: document.getElementById("port").value,
+                    },
+                        function () {
+                            alert("网口连接建立成功");
+                            document.getElementById("Init").value = "断开连接";
+                            socket.emit('imessage',document.getElementById("protocol").value);
+                        });
+                }
+                else {
+                    $.post("/close", {
+                        porttype: document.getElementById("protocol").value,
+                    },
+                        function () {
+                            alert("网口连接断开成功");
+                            document.getElementById("Init").value = "开始连接";
+                        });
+                }
+            });
+
+            $("#btn2").click(function () {
+                $.post("/send", {
+                    porttype: document.getElementById("protocol").value,
+                    data: $("#InPut").val(),
+                },
+                    function (data) {
+                        document.getElementById("OutPut").value += data;
+                    });
+            });
+        });
+
+        var str;
+
+        // function valid() {
+        //     str = document.getElementById("InPut").value;
+        //     if (str == "") {
+        //         alert("你还没有输入数字");
+        //         return 2;
+        //     }
+        //     else {
+        //         var tmp = /^\d[\s\d]*$/.test(str);
+        //         if (tmp == true) {
+        //             return 1;
+        //         }
+        //         else {
+        //             alert("你输入的格式有误");
+        //             return 0;
+        //         }
+        //     }
+        // }
+
+        // function checkmessage() {
+        //     var a = valid();
+        //     if (a == 2 || a == 0)
+        //         return false;
+        //     //说明有数字输入
+        //     else {
+        //         //document.getElementById("formid").submit();
+        //         alert("你输入的格式正确");
+        //         return true;
+        //     }
+        // }
+    </script>
+</head>
+
+<body>
+    <div id="header">
+        <p>网口调试助手</p>
+    </div>
+    <div id="config">
+        <label>网络协议类型</label>
+        <input type="form" name="protocol" id="protocol" value="TCP Server">
+        <br>
+        <label>远程主机地址</label>
+        <input type="form" name="address" id="address" value="127.0.0.1">
+        <br>
+        <label>远程主机端口</label>
+        <input type="form" name="port" id="port" value="8000">
+        <br>
+        <input type="button" name="Init" id="Init" value="开始连接">
+    </div>
+    <div id="display">
+        <label>发送内容</label>
+        <br><br>
+        <textarea name="InPut" id="InPut" align="top" style="height: 50px; width: 400px; font-size: 12px"
+            placeholder="在此输入发送内容"></textarea>
+        <br><br>
+        <input type="button" name="btn1" id="btn1" value="检查发送数据" align="center" onclick="checkmessage()">
+        <br><br>
+        <label>接收内容</label>
+        <br><br>
+        <textarea name="OutPut" id="OutPut" align="top" style="height: 50px; width: 400px; font-size: 12px"
+            placeholder="在此显示接收内容"></textarea>
+        <br><br>
+        <input type="button" name="btn2" id="btn2" value="发送" align="center" onclick="changepage()">
+    </div>
+    <div id="footer">
+        <label>质量部软件测试组 yexl V0.1 20200202</label>
+    </div>
+</body>
+
+</html>
